@@ -29,13 +29,16 @@
                             <span>{{ user['name'] }}</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-dark">
+                            {% if user.get('is_admin') %}
+                                <li><a class="dropdown-item text-info" href="/admin/add"><i class="fa-solid fa-plus me-1"></i> إضافة تطبيق</a></li>
+                            {% endif %}
                             <li><a class="dropdown-item text-danger" href="/logout"><i class="fa-solid fa-right-from-bracket me-1"></i> خروج</a></li>
                         </ul>
                     </div>
                 {% else %}
                     <a href="/login/google" class="btn btn-outline-light btn-sm rounded-pill"><i class="fa-brands fa-google text-danger me-1"></i> دخول بـ Google</a>
+                    <a href="/login/admin" class="btn btn-outline-info btn-sm rounded-pill"><i class="fa-brands fa-github me-1"></i> دخول الأدمن</a>
                 {% endif %}
-                <a href="/admin/add" class="btn btn-info btn-sm"><i class="fa-solid fa-plus me-1"></i> إضافة</a>
             </div>
         </div>
     </nav>
@@ -72,7 +75,7 @@
             {% else %}
             <div class="text-center py-5">
                 <i class="fa-solid fa-box-open fs-1 text-secondary mb-3"></i>
-                <p class="text-secondary">لا توجد تطبيقات حالياً. قم بإضافة أول تطبيق من لوحة التحكم!</p>
+                <p class="text-secondary">لا توجد تطبيقات حالياً. قم بإضافة أول تطبيق بعد تسجيل الدخول كمالك!</p>
             </div>
             {% endfor %}
         </div>

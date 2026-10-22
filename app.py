@@ -3,8 +3,10 @@ import sqlite3
 import os
 
 app = Flask(__name__)
-app.secret_key = 'mahmoud_electro_secret_key'
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.secret_key = 'mahmoud_electro_secure_secret_key'
+
+# اسم مسؤول المتجر المسموح له بفرز وإضافة التطبيقات
+ADMIN_GITHUB_USER = 'mahmoud-ahmid'
 
 def init_db():
     conn = sqlite3.connect('store.db')
@@ -12,10 +14,10 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            google_id TEXT UNIQUE,
+            email TEXT UNIQUE,
             name TEXT,
-            email TEXT,
-            picture TEXT
+            picture TEXT,
+            role TEXT DEFAULT 'user'
         )
     ''')
     cursor.execute('''
@@ -68,22 +70,61 @@ def index():
     
     user = session.get('user')
     user_favs = []
-    if user:
+    if user and 'id' in user:
         fav_rows = conn.execute('SELECT app_id FROM favorites WHERE user_id = ?', (user['id'],)).fetchall()
         user_favs = [r['app_id'] for r in fav_rows]
         
     conn.close()
-    return render_template('index.html', apps=apps, current_cat=category, user=user, user_favs=user_favs)
+    return render_template('index.html', apps=apps, current_cat=category, user=user, user_favs=user_favs, admin_username=ADMIN_GITHUB_USER)
 
-@app.route('/login/google')
+# صفحة تسجيل دخول الأدمن عبر GitHub
+@app.route('/login/admin', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        github_username = request.form.get('username', '').strip()
+        if github_username.lower() == ADMIN_GITHUB_USER.lower():
+            session['user'] = {
+                'id': 999,
+                'name': github_username,
+                'email': 'admin@mahmoud-electro.com',
+                'picture': f'https://github.com/{github_username}.png',
+                'is_admin': True
+            }
+            return redirect(url_for('index'))
+        else:
+            return render_template('admin_login.html', error="عذراً، هذا الحساب ليس صاحب الصلاحية!")
+    return render_template('admin_login.html')
+
+# صفحة تسجيل دخول المستخدمين عبر Google
+@app.route('/login/google', methods=['GET', 'POST'])
 def google_login():
-    session['user'] = {
-        'id': 1,
-        'name': 'مستخدم جوجل',
-        'email': 'user@gmail.com',
-        'picture': 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'
-    }
-    return redirect(url_for('index'))
+    if request.method == 'POST':
+        email = request.form.get('email')
+        name = request.form.get('name')
+        if email and name:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
+            user_row = cursor.fetchone()
+            if not user_row:
+                picture = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'
+                cursor.execute('INSERT INTO users (email, name, picture) VALUES (?, ?, ?)', (email, name, picture))
+                conn.commit()
+                user_id = cursor.lastrowid
+            else:
+                user_id = user_row['id']
+                picture = user_row['picture']
+            conn.close()
+
+            session['user'] = {
+                'id': user_id,
+                'name': name,
+                'email': email,
+                'picture': picture,
+                'is_admin': False
+            }
+            return redirect(url_for('index'))
+    return render_template('google_login.html')
 
 @app.route('/logout')
 def logout():
@@ -130,6 +171,11 @@ def add_comment(app_id):
 
 @app.route('/admin/add', methods=['GET', 'POST'])
 def admin_add():
+    user = session.get('user')
+    # حماية لوحة التحكم: السماح فقط لحساب الأدمن
+    if not user or not user.get('is_admin'):
+        return redirect(url_for('admin_login'))
+
     if request.method == 'POST':
         title = request.form['title']
         version = request.form['version']
