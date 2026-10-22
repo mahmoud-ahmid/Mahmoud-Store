@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إضافة تطبيق جديد | لوحة التحكم</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-light py-5">
+    <div class="container" style="max-width: 600px;">
+        <div class="card bg-secondary bg-opacity-25 border-secondary p-4 rounded-4">
+            <h3 class="mb-4 text-info">إضافة تطبيق جديد إلى المتجر</h3>
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label">اسم التطبيق</label>
+                    <input type="text" name="title" class="form-control bg-dark text-light border-secondary" required placeholder="مثال: تطبيق مدير الديون">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">رقم الإصدار</label>
+                    <input type="text" name="version" class="form-control bg-dark text-light border-secondary" placeholder="1.0.0">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">التصنيف</label>
+                    <select name="category" class="form-select bg-dark text-light border-secondary">
+                        <option value="أدوات">أدوات</option>
+                        <option value="إنتاجية">إنتاجية</option>
+                        <option value="ألعاب">ألعاب</option>
+                        <option value="أخرى">أخرى</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">رابط صورة الأيقونة (URL)</label>
+                    <input type="url" name="icon_url" class="form-control bg-dark text-light border-secondary" placeholder="https://example.com/icon.png">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">رابط تحكيم الملف (APK / GitHub Release)</label>
+                    <input type="url" name="download_url" class="form-control bg-dark text-light border-secondary" required placeholder="https://github.com/...">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">وصف التطبيق</label>
+                    <textarea name="description" class="form-control bg-dark text-light border-secondary" rows="4" placeholder="اكتب التفاصيل والمميزات هنا..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-info w-100 rounded-3">حفظ ونشر التطبيق</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
