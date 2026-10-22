@@ -1,11 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_file
 import sqlite3
 import os
+import requests
+import zipfile
+import io
 
 app = Flask(__name__)
 app.secret_key = 'mahmoud_electro_secure_secret_key'
 
-# اسم مسؤول المتجر المسموح له بفرز وإضافة التطبيقات
 ADMIN_GITHUB_USER = 'mahmoud-ahmid'
 
 def init_db():
@@ -77,7 +79,6 @@ def index():
     conn.close()
     return render_template('index.html', apps=apps, current_cat=category, user=user, user_favs=user_favs, admin_username=ADMIN_GITHUB_USER)
 
-# صفحة تسجيل دخول الأدمن عبر GitHub
 @app.route('/login/admin', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -95,7 +96,6 @@ def admin_login():
             return render_template('admin_login.html', error="عذراً، هذا الحساب ليس صاحب الصلاحية!")
     return render_template('admin_login.html')
 
-# صفحة تسجيل دخول المستخدمين عبر Google
 @app.route('/login/google', methods=['GET', 'POST'])
 def google_login():
     if request.method == 'POST':
@@ -139,11 +139,61 @@ def app_details(app_id):
     conn.close()
     return render_template('detail.html', app=app_data, comments=comments, user=session.get('user'))
 
+# رابط التنزيل الذكي الذي يفحص ويفك الضغط تلقائياً
+@app.route('/download/<int:app_id>')
+def download_app(app_id):
+    conn = get_db()
+    app_data = conn.execute('SELECT * FROM apps WHERE id = ?', (app_id,)).fetchone()
+    
+    if not app_data:
+        conn.close()
+        return "التطبيق غير موجود", 404
+
+    # زيادة عدد التحميلات
+    conn.execute('UPDATE apps SET downloads_count = downloads_count + 1 WHERE id = ?', (app_id,))
+    conn.commit()
+    conn.close()
+
+    raw_url = app_data['download_url']
+
+    # إذا كان الرابط ينتهي بـ .apk أو ملف مباشر يتم تحويل المستخدم إليه فوراً
+    if raw_url.endswith('.apk') or raw_url.endswith('.exe'):
+        return redirect(raw_url)
+
+    try:
+        # تحكم آلي بملفات ZIP القادمة من غيتهاب
+        res = requests.get(raw_url, timeout=15)
+        if res.status_code == 200:
+            z = zipfile.ZipFile(io.BytesIO(res.content))
+            
+            # البحث عن أي ملف APK أو ملف رئيسي داخل الـ ZIP
+            target_file = None
+            for file_info in z.infolist():
+                if file_info.filename.endswith('.apk') or file_info.filename.endswith('.exe') or file_info.filename.endswith('.py'):
+                    target_file = file_info
+                    break
+            
+            if target_file:
+                extracted_data = z.read(target_file.filename)
+                filename = os.path.basename(target_file.filename)
+                return send_file(
+                    io.BytesIO(extracted_data),
+                    as_attachment=True,
+                    download_name=filename
+                )
+            else:
+                # إذا لم يجد ملف سينفيذي، يُنزل الـ ZIP كالمعتاد
+                return redirect(raw_url)
+        else:
+            return redirect(raw_url)
+    except Exception as e:
+        return redirect(raw_url)
+
 @app.route('/toggle-favorite/<int:app_id>', methods=['POST'])
 def toggle_favorite(app_id):
     user = session.get('user')
     if not user:
-        return jsonify({'status': 'error', 'message': 'التسجيل مطلوب لحفظ المفضلة'}), 401
+        return jsonify({'status': 'error', 'message': 'التسجيل مطلوب'}), 401
     
     conn = get_db()
     exist = conn.execute('SELECT * FROM favorites WHERE user_id = ? AND app_id = ?', (user['id'], app_id)).fetchone()
@@ -172,7 +222,6 @@ def add_comment(app_id):
 @app.route('/admin/add', methods=['GET', 'POST'])
 def admin_add():
     user = session.get('user')
-    # حماية لوحة التحكم: السماح فقط لحساب الأدمن
     if not user or not user.get('is_admin'):
         return redirect(url_for('admin_login'))
 
