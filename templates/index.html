@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>محمود إلكترو | متجر التطبيقات</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -23,6 +24,9 @@
             <a class="navbar-brand fw-bold fs-4 text-info" href="/"><i class="fa-solid fa-microchip me-2"></i> محمود إلكترو</a>
             <div class="d-flex align-items-center gap-2">
                 {% if user %}
+                    {% if not user.get('is_admin') %}
+                    <a href="/favorites" class="btn btn-outline-danger btn-sm rounded-pill"><i class="fa-solid fa-heart me-1"></i> مفضلتي</a>
+                    {% endif %}
                     <div class="dropdown">
                         <button class="btn btn-outline-light btn-sm dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
                             <img src="{{ user['picture'] }}" class="user-avatar" alt="Avatar">
@@ -46,8 +50,21 @@
     <div class="container my-4">
         <div class="p-4 p-md-5 mb-4 rounded-4 bg-gradient text-center" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155;">
             <h1 class="display-6 fw-bold text-info mb-2">متجر تطبيقات محمود إلكترو</h1>
-            <p class="text-secondary fs-5">حمل أحدث التطبيقات مجاناً - سجل بـ Google لحفظ مفضلتك وتلقي الإشعارات!</p>
+            <p class="text-secondary fs-5">حمل أحدث التطبيقات مجاناً - سجل بـ Google لحفظ مفضلتك!</p>
+            <form method="GET" action="/" class="mx-auto mt-3" style="max-width: 480px;">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control bg-dark text-light border-secondary" placeholder="ابحث عن تطبيق..." value="{{ q or '' }}">
+                    {% if current_cat != 'all' %}<input type="hidden" name="cat" value="{{ current_cat }}">{% endif %}
+                    <button class="btn btn-info" type="submit"><i class="fa-solid fa-search"></i> بحث</button>
+                </div>
+            </form>
         </div>
+
+        {% if q %}
+        <div class="alert alert-info py-2 small">
+            نتائج البحث عن: <strong>{{ q }}</strong> — <a href="/" class="text-info">مسح</a>
+        </div>
+        {% endif %}
 
         <div class="row g-4">
             {% for app in apps %}
@@ -59,13 +76,13 @@
                             <h5 class="mb-0 fw-bold">{{ app['title'] }}</h5>
                             <span class="badge bg-secondary mt-1">v{{ app['version'] }}</span>
                         </div>
+                        {% if user and not user.get('is_admin') %}
                         <button class="btn btn-link p-0 text-danger fs-5" onclick="favApp({{ app['id'] }}, this)">
                             <i class="{% if app['id'] in user_favs %}fa-solid{% else %}fa-regular{% endif %} fa-heart"></i>
                         </button>
+                        {% endif %}
                     </div>
-
                     <p class="text-secondary small flex-grow-1">{{ app['description'][:90] }}...</p>
-
                     <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary border-opacity-25">
                         <div class="text-warning small"><i class="fa-solid fa-star"></i> {{ app['rating'] }}</div>
                         <a href="/app/{{ app['id'] }}" class="btn btn-accent btn-sm px-3">التفاصيل والتحميل</a>
@@ -75,7 +92,7 @@
             {% else %}
             <div class="text-center py-5">
                 <i class="fa-solid fa-box-open fs-1 text-secondary mb-3"></i>
-                <p class="text-secondary">لا توجد تطبيقات حالياً. قم بإضافة أول تطبيق بعد تسجيل الدخول كمالك!</p>
+                <p class="text-secondary">لا توجد تطبيقات مطابقة.</p>
             </div>
             {% endfor %}
         </div>
@@ -84,16 +101,16 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function favApp(appId, btn) {
-            fetch('/toggle-favorite/' + appId, { method: 'POST' })
+            fetch('/toggle-favorite/' + appId, {
+                method: 'POST',
+                headers: {'X-CSRFToken': document.querySelector('meta[name=csrf-token]').content}
+            })
             .then(res => {
-                if(res.status === 401) {
-                    alert('يرجى تسجيل الدخول بحساب Google لحفظ التطبيق في المفضلة!');
-                    return;
-                }
+                if (res.status === 401) { alert('يرجى تسجيل الدخول بحساب Google'); return; }
                 return res.json();
             })
             .then(data => {
-                if(data && data.status) {
+                if (data && data.status) {
                     const icon = btn.querySelector('i');
                     icon.classList.toggle('fa-solid');
                     icon.classList.toggle('fa-regular');

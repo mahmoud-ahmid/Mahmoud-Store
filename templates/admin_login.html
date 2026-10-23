@@ -8,21 +8,26 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-dark text-light d-flex align-items-center justify-content-center vh-100">
-    <div class="card bg-secondary bg-opacity-25 border-secondary p-4 rounded-4 text-center" style="max-width: 400px; width: 100%;">
-        <i class="fa-brands fa-github fs-1 text-info mb-3"></i>
-        <h4 class="fw-bold mb-3">التحقق من مالك المتجر</h4>
-        <p class="text-secondary small">أدخل اسم حسابك على GitHub للتحقق من صلاحيات الأدمن</p>
-        
-        {% if error %}
-            <div class="alert alert-danger py-2 small">{{ error }}</div>
-        {% endif %}
-
+    <div class="card bg-secondary bg-opacity-25 border-secondary p-4 rounded-4" style="max-width: 420px; width: 100%;">
+        <div class="text-center mb-3">
+            <i class="fa-brands fa-github fs-1 text-info mb-2"></i>
+            <h4 class="fw-bold">التحقق من مالك المتجر</h4>
+            <p class="text-secondary small">أدخل اسم المستخدم وكلمة المرور</p>
+        </div>
+        {% if error %}<div class="alert alert-danger py-2 small">{{ error }}</div>{% endif %}
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="mb-3">
-                <input type="text" name="username" class="form-control bg-dark text-light border-secondary text-center" placeholder="GitHub Username (e.g. mahmoud-ahmid)" required>
+                <input type="text" name="username" class="form-control bg-dark text-light border-secondary text-center"
+                       placeholder="GitHub Username" value="mahmoud-ahmid" required autocomplete="username">
             </div>
-            <button type="submit" class="btn btn-info w-100 rounded-3 fw-bold">تأكيد الحساب والتحقق</button>
+            <div class="mb-3">
+                <input type="password" name="password" class="form-control bg-dark text-light border-secondary text-center"
+                       placeholder="كلمة المرور" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn btn-info w-100 rounded-3 fw-bold">دخول</button>
         </form>
+        <p class="text-secondary small text-center mt-3 mb-0">كلمة المرور موجودة في ملف <code>.env</code></p>
     </div>
 </body>
 </html>

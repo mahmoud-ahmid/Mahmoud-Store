@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تعديل {{ app['title'] }} | محمود إلكترو</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-light py-5">
+    <div class="container" style="max-width: 600px;">
+        <div class="card bg-secondary bg-opacity-25 border-secondary p-4 rounded-4">
+            <h3 class="mb-4 text-info">تعديل التطبيق: {{ app['title'] }}</h3>
+            {% if error %}<div class="alert alert-danger py-2 small">{{ error }}</div>{% endif %}
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label">اسم التطبيق</label>
+                    <input type="text" name="title" class="form-control bg-dark text-light border-secondary" value="{{ app['title'] }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">رقم الإصدار</label>
+                    <input type="text" name="version" class="form-control bg-dark text-light border-secondary" value="{{ app['version'] or '' }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">التصنيف</label>
+                    <select name="category" class="form-select bg-dark text-light border-secondary">
+                        {% for opt in ['أدوات','إنتاجية','ألعاب','أخرى'] %}
+                        <option value="{{ opt }}" {% if app['category']==opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">رابط الأيقونة</label>
+                    <input type="url" name="icon_url" class="form-control bg-dark text-light border-secondary" value="{{ app['icon_url'] or '' }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">رابط التحميل</label>
+                    <input type="url" name="download_url" class="form-control bg-dark text-light border-secondary" value="{{ app['download_url'] }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">الوصف</label>
+                    <textarea name="description" class="form-control bg-dark text-light border-secondary" rows="4">{{ app['description'] or '' }}</textarea>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-info flex-grow-1">حفظ التعديلات</button>
+                    <a href="/app/{{ app['id'] }}" class="btn btn-outline-secondary">إلغاء</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

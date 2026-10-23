@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>مفضلتي | محمود إلكترو</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+        .app-card { background: #1e293b; border-radius: 20px; border: 1px solid #334155; }
+        .app-icon { width: 70px; height: 70px; border-radius: 16px; object-fit: cover; }
+        .user-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark border-bottom border-secondary px-3">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-info" href="/"><i class="fa-solid fa-microchip me-2"></i> محمود إلكترو</a>
+            <div class="d-flex align-items-center gap-2">
+                <a href="/" class="btn btn-outline-light btn-sm rounded-pill"><i class="fa-solid fa-house me-1"></i> المتجر</a>
+                <img src="{{ user['picture'] }}" class="user-avatar" alt="Avatar">
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <h2 class="fw-bold text-info mb-4"><i class="fa-solid fa-heart me-2"></i> مفضلتي</h2>
+        <div class="row g-4">
+            {% for app in apps %}
+            <div class="col-md-6 col-lg-4">
+                <div class="app-card p-3 d-flex flex-column h-100">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="{{ app['icon_url'] or 'https://cdn-icons-png.flaticon.com/512/2583/2583138.png' }}" class="app-icon me-3" alt="icon">
+                        <div class="flex-grow-1">
+                            <h5 class="mb-0 fw-bold">{{ app['title'] }}</h5>
+                            <span class="badge bg-secondary mt-1">v{{ app['version'] }}</span>
+                        </div>
+                        <button class="btn btn-link p-0 text-danger fs-5" onclick="favApp({{ app['id'] }}, this)">
+                            <i class="fa-solid fa-heart"></i>
+                        </button>
+                    </div>
+                    <p class="text-secondary small flex-grow-1">{{ app['description'][:90] }}...</p>
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary border-opacity-25">
+                        <span class="text-warning small"><i class="fa-solid fa-star"></i> {{ app['rating'] }}</span>
+                        <a href="/app/{{ app['id'] }}" class="btn btn-info btn-sm px-3">التفاصيل</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fa-regular fa-heart fs-1 text-secondary mb-3"></i>
+                <p class="text-secondary">لا توجد تطبيقات في مفضلتك بعد.</p>
+                <a href="/" class="btn btn-outline-info mt-2">تصفح المتجر</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        function favApp(appId, btn) {
+            fetch('/toggle-favorite/' + appId, {
+                method: 'POST',
+                headers: {'X-CSRFToken': document.querySelector('meta[name=csrf-token]').content}
+            })
+            .then(res => {
+                if (res.status === 401) { alert('سجّل دخول أولاً'); return; }
+                return res.json();
+            })
+            .then(data => {
+                if (data && data.status === 'removed') btn.remove();
+            });
+        }
+    </script>
+</body>
+</html>

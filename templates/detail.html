@@ -16,6 +16,18 @@
     <div class="container">
         <a href="/" class="btn btn-outline-secondary mb-4"><i class="fa-solid fa-arrow-right me-1"></i> العودة للمتجر</a>
 
+        {% if user and user.get('is_admin') %}
+        <div class="alert alert-warning d-flex gap-2 align-items-center mb-3 py-2">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span class="small">أنت أدمن — يمكنك التعديل والحذف</span>
+            <a href="/admin/edit/{{ app['id'] }}" class="btn btn-sm btn-outline-dark ms-auto"><i class="fa-solid fa-pen me-1"></i> تعديل</a>
+            <form method="POST" action="/admin/delete/{{ app['id'] }}" onsubmit="return confirm('حذف التطبيق وكل تعليقاته؟ لا يمكن التراجع.');" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-danger"><i class="fa-solid fa-trash me-1"></i> حذف</button>
+            </form>
+        </div>
+        {% endif %}
+
         <div class="card-custom p-4 mb-4">
             <div class="d-flex align-items-center flex-wrap gap-3">
                 <img src="{{ app['icon_url'] or 'https://cdn-icons-png.flaticon.com/512/2583/2583138.png' }}" class="app-large-icon" alt="App Icon">
@@ -23,12 +35,12 @@
                     <h2 class="fw-bold mb-1">{{ app['title'] }}</h2>
                     <p class="text-info mb-1">الإصدار: v{{ app['version'] }} | التصنيف: {{ app['category'] }}</p>
                     <span class="text-warning"><i class="fa-solid fa-star"></i> {{ app['rating'] }} / 5.0</span>
+                    <span class="text-secondary ms-3 small"><i class="fa-solid fa-download me-1"></i> {{ app['downloads_count'] }} تحميل</span>
                 </div>
                 <div class="ms-auto w-100 w-md-auto mt-3 mt-md-0">
-                    <a href="{{ app['download_url'] }}" target="_blank" class="btn btn-success btn-lg w-100 px-4 rounded-3"><i class="fa-solid fa-download me-2"></i> تحميل التطبيق</a>
+                    <a href="/download/{{ app['id'] }}" class="btn btn-success btn-lg w-100 px-4 rounded-3"><i class="fa-solid fa-download me-2"></i> تحميل التطبيق</a>
                 </div>
             </div>
-            
             <hr class="my-4 border-secondary opacity-25">
             <h5 class="fw-bold text-info mb-2">وصف التطبيق</h5>
             <p class="text-light fs-6" style="white-space: pre-line;">{{ app['description'] }}</p>
@@ -36,13 +48,15 @@
 
         <div class="card-custom p-4">
             <h5 class="fw-bold mb-3"><i class="fa-solid fa-comments text-info me-2"></i> التعليقات والآراء</h5>
-            
             <form action="/comment/{{ app['id'] }}" method="POST" class="mb-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% if not user %}
                 <div class="mb-2">
-                    <input type="text" name="user_name" class="form-control bg-dark text-light border-secondary" placeholder="اسمك (اختياري)">
+                    <input type="text" name="user_name" class="form-control bg-dark text-light border-secondary" placeholder="اسمك (اختياري)" maxlength="40">
                 </div>
+                {% endif %}
                 <div class="mb-2">
-                    <textarea name="comment" class="form-control bg-dark text-light border-secondary" rows="2" placeholder="اكتب تعليقك أو استفسارك هنا..." required></textarea>
+                    <textarea name="comment" class="form-control bg-dark text-light border-secondary" rows="2" placeholder="اكتب تعليقك..." required maxlength="2000"></textarea>
                 </div>
                 <button type="submit" class="btn btn-info btn-sm"><i class="fa-solid fa-paper-plane me-1"></i> نشر التعليق</button>
             </form>
@@ -50,9 +64,17 @@
             <div class="vstack gap-3">
                 {% for c in comments %}
                 <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25">
-                    <div class="d-flex justify-content-between">
-                        <strong class="text-info">{{ c['user_name'] }}</strong>
-                        <small class="text-secondary">{{ c['created_at'] }}</small>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong class="text-info">{{ c['user_name'] }}</strong>
+                            <small class="text-secondary ms-2">{{ c['created_at'] }}</small>
+                        </div>
+                        {% if user and user.get('is_admin') %}
+                        <form method="POST" action="/admin/comment/delete/{{ c['id'] }}" onsubmit="return confirm('حذف التعليق؟');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-sm btn-outline-danger py-0 px-2"><i class="fa-solid fa-trash small"></i></button>
+                        </form>
+                        {% endif %}
                     </div>
                     <p class="mb-0 mt-1 text-light fs-6">{{ c['comment'] }}</p>
                 </div>
