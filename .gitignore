@@ -18,3 +18,18 @@ torepair.sh
 s.sh
 c
 test_phase2b.py
+
+# Termux-specific (not needed on Render)
+run.sh
+stop.sh
+
+# Personal utility scripts
+s.sh
+test_phase2b.py
+
+# Historical fix scripts
+apply_phase*.sh
+fix_phase*.sh
+fix_phase*.py
+torepair.sh
+c
