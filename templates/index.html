@@ -17,6 +17,8 @@
         .btn-accent { background: var(--accent); color: #0f172a; font-weight: bold; border-radius: 12px; }
         .user-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
     </style>
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#38bdf8">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top px-3">
@@ -34,13 +36,14 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-dark">
                             {% if user.get('is_admin') %}
+                                <li><a class="dropdown-item text-info" href="/admin/stats"><i class="fa-solid fa-chart-line me-1"></i> إحصائيات</a></li>
                                 <li><a class="dropdown-item text-info" href="/admin/add"><i class="fa-solid fa-plus me-1"></i> إضافة تطبيق</a></li>
                             {% endif %}
-                            <li><a class="dropdown-item text-danger" href="/logout"><i class="fa-solid fa-right-from-bracket me-1"></i> خروج</a></li>
+                            <li><form method="POST" action="/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item text-danger"><i class="fa-solid fa-right-from-bracket me-1"></i> خروج</button></form></li>
                         </ul>
                     </div>
                 {% else %}
-                    <a href="/login/google" class="btn btn-outline-light btn-sm rounded-pill"><i class="fa-brands fa-google text-danger me-1"></i> دخول بـ Google</a>
+                    <a href="/login" class="btn btn-outline-light btn-sm rounded-pill"><i class="fa-brands fa-google text-danger me-1"></i> تسجيل الدخول</a>
                     <a href="/login/admin" class="btn btn-outline-info btn-sm rounded-pill"><i class="fa-brands fa-github me-1"></i> دخول الأدمن</a>
                 {% endif %}
             </div>
@@ -82,9 +85,16 @@
                         </button>
                         {% endif %}
                     </div>
-                    <p class="text-secondary small flex-grow-1">{{ app['description'][:90] }}...</p>
+                    <p class="text-secondary small flex-grow-1">{{ (app['description'] or '')[:90] }}...</p>
                     <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary border-opacity-25">
-                        <div class="text-warning small"><i class="fa-solid fa-star"></i> {{ app['rating'] }}</div>
+                        <div class="text-warning small">
+                            {% if rating_counts and rating_counts.get(app['id'], 0) > 0 %}
+                            <i class="fa-solid fa-star"></i> {{ app['rating'] }}
+                            <span class="text-secondary">({{ rating_counts[app['id']] }})</span>
+                            {% else %}
+                            <span class="text-secondary small">جديد</span>
+                            {% endif %}
+                        </div>
                         <a href="/app/{{ app['id'] }}" class="btn btn-accent btn-sm px-3">التفاصيل والتحميل</a>
                     </div>
                 </div>
@@ -116,6 +126,13 @@
                     icon.classList.toggle('fa-regular');
                 }
             });
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+              .then(r => console.log('SW registered:', r.scope))
+              .catch(e => console.error('SW failed:', e));
         }
     </script>
 </body>

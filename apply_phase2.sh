@@ -1,4 +1,3 @@
-SCRIPT_START
 #!/data/data/com.termux/files/usr/bin/bash
 set -e
 cd "$(dirname "$0")"
@@ -426,4 +425,4 @@ PY
 
 echo ""
 echo "✓ Phase 2 templates applied"
-SCRIPT_END
+exit 0

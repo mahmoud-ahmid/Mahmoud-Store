@@ -41,7 +41,7 @@
                             <i class="fa-solid fa-heart"></i>
                         </button>
                     </div>
-                    <p class="text-secondary small flex-grow-1">{{ app['description'][:90] }}...</p>
+                    <p class="text-secondary small flex-grow-1">{{ (app['description'] or '')[:90] }}...</p>
                     <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary border-opacity-25">
                         <span class="text-warning small"><i class="fa-solid fa-star"></i> {{ app['rating'] }}</span>
                         <a href="/app/{{ app['id'] }}" class="btn btn-info btn-sm px-3">التفاصيل</a>

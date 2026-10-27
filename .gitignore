@@ -4,3 +4,7 @@ __pycache__/
 .env
 backup_*
 *.log
+app.log
+server.log
+server.pid
+../store-backups
