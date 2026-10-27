@@ -8,3 +8,13 @@ app.log
 server.log
 server.pid
 ../store-backups
+
+# Temporary fix scripts (do not commit)
+apply_phase*.sh
+fix_phase*.sh
+fix_phase*.py
+fix_pwa_html.py
+torepair.sh
+s.sh
+c
+test_phase2b.py
